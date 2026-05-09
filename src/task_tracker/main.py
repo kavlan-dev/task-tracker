@@ -2,7 +2,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 TASKS_FILE = "tasks.json"
 
@@ -65,6 +65,30 @@ def add_task(description: str) -> Task:
     return new_task
 
 
+def list_tasks(status_filter: Optional[str] = None) -> List[Task]:
+    tasks = load_tasks()
+    if not status_filter:
+        return tasks
+    filtered_tasks = [task for task in tasks if task.status == status_filter]
+    return filtered_tasks
+
+
+def display_tasks(tasks: List[Task]) -> None:
+    if not tasks:
+        print("Задачи не найдены.")
+        return
+
+    print("Задачи:")
+    print("-" * 50)
+    for task in tasks:
+        print(f"ID: {task.id}")
+        print(f"Описание: {task.description}")
+        print(f"Статус: {task.status}")
+        print(f"Создано: {task.createdAt}")
+        print(f"Обновлено: {task.updatedAt}")
+        print("-" * 50)
+
+
 def help_msg() -> str:
     return """Task Tracker CLI - Использование:
 
@@ -99,6 +123,12 @@ def main():
             description = " ".join(args)
             task = add_task(description)
             print(f"Задача успешно добавлена (ID: {task.id})")
+        elif command == "list":
+            status_filter = None
+            if args:
+                status_filter = args[0]
+            tasks = list_tasks(status_filter)
+            display_tasks(tasks)
         else:
             print(f"Неизвестная команда: {command}")
             print(help_msg())
