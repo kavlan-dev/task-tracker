@@ -72,6 +72,18 @@ def update_task(args: List[str]) -> Optional[Task]:
     return task
 
 
+def delete_task(args: List[str]) -> bool:
+    tasks = load_tasks()
+    tid = int(args[0])
+    task = find_task_by_id(tasks, tid)
+    if not task:
+        return False
+
+    tasks.remove(task)
+    save_tasks(tasks)
+    return True
+
+
 def list_tasks(args: List[str] = []) -> List[Task]:
     tasks = load_tasks()
     if not args:
@@ -145,6 +157,16 @@ def main():
                 print("Ошибка: не удалось обновить задачу")
                 return
             print("Задача успешно обновлена")
+        elif command == "delete":
+            if len(args) < 1:
+                print("Ошибка: Требуется ID задачи")
+                print(help_msg())
+                return
+            success = delete_task(args)
+            if not success:
+                print("Ошибка: не удалось удалить задачу")
+                return
+            print("Задача успешно удалена")
         else:
             print(f"Неизвестная команда: {command}")
             print(help_msg())
