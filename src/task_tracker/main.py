@@ -17,12 +17,6 @@ class Task:
     updatedAt: str = datetime.now().isoformat()
 
 
-def get_task_id(tasks: List[Task]) -> int:
-    if not tasks:
-        return 1
-    return max(task.id for task in tasks) + 1
-
-
 def load_tasks() -> List[Task]:
     if not os.path.exists(TASKS_FILE):
         with open(TASKS_FILE, "w", encoding="utf-8") as f:
@@ -38,28 +32,56 @@ def save_tasks(tasks: List[Task]) -> None:
         json.dump([task.__dict__ for task in tasks], f, indent=2)
 
 
-def add_task(description: str) -> Task:
+def get_task_id(tasks: List[Task]) -> int:
+    if not tasks:
+        return 1
+
+    return max(task.id for task in tasks) + 1
+
+
+def find_task_by_id(tasks: List[Task], task_id: int) -> Optional[Task]:
+    for task in tasks:
+        if task.id == task_id:
+            return task
+
+    return None
+
+
+def add_task(args: List[str]) -> Optional[Task]:
     tasks = load_tasks()
+    desc = " ".join(args)
+    if not desc:
+        return
     tid = get_task_id(tasks)
-    new_task = Task(tid, description)
+    new_task = Task(tid, desc)
     tasks.append(new_task)
     save_tasks(tasks)
     return new_task
 
 
-def list_tasks(status_filter: Optional[str] = None) -> List[Task]:
+def update_task(args: List[str]) -> Optional[Task]:
     tasks = load_tasks()
-    if not status_filter:
+    tid = int(args[0])
+    task = find_task_by_id(tasks, tid)
+    if not task:
+        return
+    new_desc = " ".join(args[1:])
+    task.description = new_desc
+    task.updatedAt = datetime.now().isoformat()
+    save_tasks(tasks)
+    return task
+
+
+def list_tasks(args: List[str] = []) -> List[Task]:
+    tasks = load_tasks()
+    if not args:
         return tasks
+    status_filter = args[0]
     filtered_tasks = [task for task in tasks if task.status == status_filter]
     return filtered_tasks
 
 
 def display_tasks(tasks: List[Task]) -> None:
-    if not tasks:
-        print("Задачи не найдены.")
-        return
-
     print("Задачи:")
     print("-" * 50)
     for task in tasks:
@@ -102,19 +124,33 @@ def main():
                 print("Ошибка: Требуется описание задачи")
                 print(help_msg())
                 return
-            description = " ".join(args)
-            task = add_task(description)
+            task = add_task(args)
+            if not task:
+                print("Ошибка: описание задачи не может быть пустым")
+                return
             print(f"Задача успешно добавлена (ID: {task.id})")
         elif command == "list":
-            status_filter = None
-            if args:
-                status_filter = args[0]
-            tasks = list_tasks(status_filter)
+            tasks = list_tasks(args)
+            if not tasks:
+                print("Задачи не найдены.")
+                return
             display_tasks(tasks)
+        elif command == "update":
+            if len(args) < 2:
+                print("Ошибка: Требуется ID задачи и новое описание")
+                print(help_msg())
+                return
+            task = update_task(args)
+            if not task:
+                print("Ошибка: не удалось обновить задачу")
+                return
+            print("Задача успешно обновлена")
         else:
             print(f"Неизвестная команда: {command}")
             print(help_msg())
             return
+    except ValueError as e:
+        print(f"Ошибка: id должно быть числом.\n\nПодробнее: {e}")
     except Exception as e:
         print(f"Ошибка {e}")
         return
