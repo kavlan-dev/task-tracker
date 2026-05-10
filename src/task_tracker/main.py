@@ -2,63 +2,45 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
+from dataclasses import dataclass
 
 TASKS_FILE = "tasks.json"
 
 
+@dataclass
 class Task:
-    def __init__(self, task_id: str, description: str, status: str = "todo"):
-        self.id = task_id
-        self.description = description
-        self.status = status
-        self.createdAt = datetime.now().isoformat()
-        self.updatedAt = datetime.now().isoformat()
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "description": self.description,
-            "status": self.status,
-            "createdAt": self.createdAt,
-            "updatedAt": self.updatedAt,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Task":
-        task = cls(data["id"], data["description"], data["status"])
-        task.createdAt = data["createdAt"]
-        task.updatedAt = data["updatedAt"]
-        return task
+    id: int
+    description: str
+    status: str = "todo"
+    createdAt: str = datetime.now().isoformat()
+    updatedAt: str = datetime.now().isoformat()
 
 
 def get_task_id(tasks: List[Task]) -> int:
     if not tasks:
         return 1
-    max_id = max(int(task.id) for task in tasks)
-    return max_id + 1
+    return max(task.id for task in tasks) + 1
 
 
 def load_tasks() -> List[Task]:
     if not os.path.exists(TASKS_FILE):
         with open(TASKS_FILE, "w", encoding="utf-8") as f:
-            json.dump([], f)
-        return []
+            json.dump([], f, indent=2)
 
     with open(TASKS_FILE, "r", encoding="utf-8") as f:
         tasks_data = json.load(f)
-        return [Task.from_dict(task_data) for task_data in tasks_data]
+        return [Task(**task_data) for task_data in tasks_data]
 
 
 def save_tasks(tasks: List[Task]) -> None:
     with open(TASKS_FILE, "w", encoding="utf-8") as f:
-        tasks_data = [task.to_dict() for task in tasks]
-        json.dump(tasks_data, f, indent=2)
+        json.dump([task.__dict__ for task in tasks], f, indent=2)
 
 
 def add_task(description: str) -> Task:
     tasks = load_tasks()
-    tid = str(get_task_id(tasks))
+    tid = get_task_id(tasks)
     new_task = Task(tid, description)
     tasks.append(new_task)
     save_tasks(tasks)
