@@ -4,7 +4,7 @@ from task_tracker.models.task import TASK_STATUS, TaskCreate, TaskUpdate
 from task_tracker.services.task import TaskService
 
 
-class Router:
+class TaskRouter:
     def __init__(self, service: TaskService) -> None:
         self.service = service
         self.command = {

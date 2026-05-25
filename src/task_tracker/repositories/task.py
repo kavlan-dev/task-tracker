@@ -6,7 +6,7 @@ import json
 from task_tracker.models.task import TASK_STATUS, Task
 
 
-class TaskRepository(ABC):
+class ITaskRepository(ABC):
     @abstractmethod
     def add(self, new_task: Task) -> Task:
         pass
@@ -28,7 +28,7 @@ class TaskRepository(ABC):
         pass
 
 
-class JsonFileTaskRepository(TaskRepository):
+class JsonFileTaskRepository(ITaskRepository):
     def __init__(self, path: str) -> None:
         self.path = path
 

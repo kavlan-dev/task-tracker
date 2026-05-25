@@ -1,10 +1,10 @@
 from typing import List, Optional
 from task_tracker.models.task import Task, TaskCreate, TaskUpdate
-from task_tracker.repositories.task import TaskRepository
+from task_tracker.repositories.task import ITaskRepository
 
 
 class TaskService:
-    def __init__(self, repo: TaskRepository) -> None:
+    def __init__(self, repo: ITaskRepository) -> None:
         self.repo = repo
 
     def create_task(self, new_task: TaskCreate) -> Task:
